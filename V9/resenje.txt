@@ -1,0 +1,168 @@
+from enum import Enum	
+from math import inf
+from queue import Queue
+
+
+class Vertex:
+    """
+    Graph vertex: A graph vertex (node) with data
+    """
+    def __init__(self, c=None, p=None, d=None, name=None):
+        """
+        Vertex constructor 
+        @param c - color
+        @param p - parent
+        @param d - distance
+        @param n - name
+        """
+        self.c = c
+        self.p = p
+        self.d = d
+        self.name = name
+
+    def __str__(self):
+        return str(self.name)
+
+
+class Graph:
+    def __init__(self, V=None, E=None):
+        """
+        Graph constructor
+        @param V - list of vertexes
+        @param E - list of edges
+        """
+        self.V = V
+        self.E = E
+        self.time = 0
+
+    """
+    Print adjacent of u
+    """
+    def print_adj(self, u):
+        print(u, '-> [ ', end="")
+        for v in self.E[self.V.index(u)]:
+            print(v, end=" ")
+        print(']')
+
+    """
+    Print path from vertex s to vertex v
+    """
+    def print_path(self, s, v):
+        if v is s:
+            print(s)
+        elif v.p is None:
+            print("No path from", s, "to", v, "exists.")
+        else:
+            self.print_path(s, v.p)
+            print(v)
+
+    def bfs(self, s):
+        for u in self.V:
+            if u is not s:
+                u.c = VertexColor.WHITE
+                u.d = inf
+                u.p = None
+
+        s.c = VertexColor.GRAY
+        s.d = 0
+        s.p = None
+
+        Q = Queue()
+        Q.put(s)
+
+        while not Q.empty():
+            u = Q.get()
+            for v in self.E[self.V.index(u)]:
+                if v.c is VertexColor.WHITE:
+                    v.c = VertexColor.GRAY
+                    v.d = u.d + 1
+                    v.p = u
+                    Q.put(v)
+
+            u.c = VertexColor.BLACK
+
+    def dfs(self):
+        for u in self.V:
+            u.c = VertexColor.WHITE
+            u.p = None
+
+        self.time = 0
+        for u in self.V:
+            if u.c is VertexColor.WHITE:
+                self.dfs_visit(u)
+
+    def dfs_visit(self, u):
+        self.time = self.time + 1
+        u.d = self.time
+        u.c = VertexColor.GRAY
+
+        for v in self.E[self.V.index(u)]:
+            if v.c is VertexColor.WHITE:
+                v.p = u
+                self.dfs_visit(v)
+
+        u.c = VertexColor.BLACK
+        self.time = self.time + 1
+        u.f = self.time
+
+
+class VertexColor(Enum):
+    BLACK = 0
+    GRAY = 127
+    WHITE = 255
+
+
+if __name__ == "__main__":
+    v1 = Vertex(name=1)
+    v2 = Vertex(name=2)
+    v3 = Vertex(name=3)
+    v4 = Vertex(name=4)
+    v5 = Vertex(name=5)
+    v6 = Vertex(name=6)
+
+    #                 1           2                  3        4             5
+    E_undirected = [[v2, v5], [v1, v3, v4, v5], [v2, v4], [v2, v3, v5], [v1, v2, v4]]
+    V_undirected = [v1, v2, v3, v4, v5]
+
+    #               1         2      3        4    5      6
+    E_directed = [[v2, v4], [v5], [v5, v6], [v2], [v4], [v6]]
+    V_directed = [v1, v2, v3, v4, v5, v6]
+
+    print('------- Print adj undirected -------')
+    G_u = Graph(V_undirected, E_undirected)
+    G_u.print_adj(v1)
+    G_u.print_adj(v2)
+    G_u.print_adj(v3)
+    G_u.print_adj(v4)
+    G_u.print_adj(v5)
+
+    print('------- Print adj directed -------')
+    G_d = Graph(V_directed, E_directed)
+    G_d.print_adj(v1)
+    G_d.print_adj(v2)
+    G_d.print_adj(v3)
+    G_d.print_adj(v4)
+    G_d.print_adj(v5)
+    G_d.print_adj(v6)
+
+    print('\n\n------- BFS undirected -------')
+    G_u.bfs(v1)
+    print('------- v1 -> v2 -------')
+    G_u.print_path(v1, v2)
+    print('------- v1 -> v3 -------')
+    G_u.print_path(v1, v3)
+    print('------- v1 -> v4 -------')
+    G_u.print_path(v1, v4)
+    print('------- v1 -> v5 -------')
+    G_u.print_path(v1, v5)
+
+    print('\n\n------- DFS directed -------')
+    G_d.dfs()
+    print('------- v1 -> v2 -------')
+    G_d.print_path(v1, v2)
+    print('------- v1 -> v3 -------')
+    G_d.print_path(v1, v3)
+    print('------- v1 -> v4 -------')
+    G_d.print_path(v1, v4)
+    print('------- v3 -> v2 -------')
+    G_d.print_path(v3, v2)

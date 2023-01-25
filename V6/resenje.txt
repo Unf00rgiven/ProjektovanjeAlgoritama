@@ -1,0 +1,201 @@
+class Node:
+    def __init__(self, parent=None, left=None, right=None, data=None):
+        self.parent = parent
+        self.left = left
+        self.right = right
+        self.data = data
+
+    def __str__(self):
+        str = f"Node: {self.data}"
+        if self.parent:
+            str += f', parent: {self.parent.data}'
+        if self.left:
+            str += f', left: {self.left.data}'
+        if self.right:
+            str += f', right: {self.right.data}'
+
+        return str
+
+
+class Tree:
+    def __init__(self, root=None):
+        self.root = root
+
+    def insert(self, node):
+        y = None
+        x = self.root
+        while x is not None:
+            y = x
+            if node.data < x.data:
+                x = x.left
+            else:
+                x = x.right
+
+        node.parent = y
+        if y is None:
+            # tree was empty
+            self.root = node
+        elif node.data < y.data:
+            y.left = node
+        else:
+            y.right = node
+
+    def inorder_tree_walk(self, node):
+        if node is not None:
+            self.inorder_tree_walk(node.left)
+            print(node.data)
+            self.inorder_tree_walk(node.right)
+
+    def search(self, node, value):
+        if node is None or value == node.data:
+            return node
+
+        if value < node.data:
+            return self.search(node.left, value)
+        else:
+            return self.search(node.right, value)
+
+    def search_iterative(self, value):
+        x = self.root
+        while x is not None and value != x.data:
+            if value < x.data:
+                x = x.left
+            else:
+                x = x.right
+        return x
+
+    def minimum(self, min):
+        while min.left is not None:
+            min = min.left
+        return min
+
+    def maximum(self, max):
+        while max.right is not None:
+            max = max.right
+        return max
+
+    def successor(self, x):
+        if x.right is not None:
+            return self.minimum(x.right)
+
+        y = x.parent
+        while y is not None and x == y.right:
+            x = y
+            y = y.parent
+
+        return y
+
+    def transplant(self, u, v):
+        if u.parent is None:
+            self.root = v
+        elif u == u.parent.left:
+            u.parent.left = v
+        else:
+            u.parent.right = v
+
+        if v is not None:
+            v.parent = u.parent
+
+    def delete(self, node):
+        if node.left is None:
+            self.transplant(node, node.right)
+        elif node.right is None:
+            self.transplant(node, node.left)
+        else:
+            y = self.minimum(node.right)
+
+            if y.parent != node:
+                self.transplant(y, y.right)
+                y.right = node.right
+                y.right.parent = y
+
+            self.transplant(node, y)
+            y.left = node.left
+            y.left.parent = y
+
+    def print_tree(self):
+        def display(root):
+            """Returns list of strings, width, height, and horizontal coordinate of the root."""
+            # No child.
+            if root.right is None and root.left is None:
+                line = '%s' % root.data
+                width = len(line)
+                height = 1
+                middle = width // 2
+                return [line], width, height, middle
+
+            # Only left child.
+            if root.right is None:
+                lines, n, p, x = display(root.left)
+                s = '%s' % root.data
+                u = len(s)
+                first_line = (x + 1) * ' ' + (n - x - 1) * '_' + s
+                second_line = x * ' ' + '/' + (n - x - 1 + u) * ' '
+                shifted_lines = [line + u * ' ' for line in lines]
+                return [first_line, second_line] + shifted_lines, n + u, p + 2, n + u // 2
+
+            # Only right child.
+            if root.left is None:
+                lines, n, p, x = display(root.right)
+                s = '%s' % root.data
+                u = len(s)
+                first_line = s + x * '_' + (n - x) * ' '
+                second_line = (u + x) * ' ' + '\\' + (n - x - 1) * ' '
+                shifted_lines = [u * ' ' + line for line in lines]
+                return [first_line, second_line] + shifted_lines, n + u, p + 2, u // 2
+
+            # Two children.
+            left, n, p, x = display(root.left)
+            right, m, q, y = display(root.right)
+            s = '%s' % root.data
+            u = len(s)
+            first_line = (x + 1) * ' ' + (n - x - 1) * '_' + s + y * '_' + (m - y) * ' '
+            second_line = x * ' ' + '/' + (n - x - 1 + u + y) * ' ' + '\\' + (m - y - 1) * ' '
+            if p < q:
+                left += [n * ' '] * (q - p)
+            elif q < p:
+                right += [m * ' '] * (p - q)
+            zipped_lines = zip(left, right)
+            lines = [first_line, second_line] + [a + u * ' ' + b for a, b in zipped_lines]
+            return lines, n + m + u, max(p, q) + 2, n + u // 2
+
+        lines, *_ = display(self.root)
+        for line in lines:
+            print(line)
+
+
+if __name__ == "__main__":
+    array = [50, 20, 75, 2, 27, 32, 80, 90, 26, 25]
+    nodes = []
+    T = Tree()
+    for x in array:
+        node = Node(data=x)
+        nodes.append(node)
+
+    for node in nodes:
+        T.insert(node)
+
+    T.inorder_tree_walk(T.root)
+
+    find = 75
+    print(f'Searching for {find}: {T.search(T.root, find)}')
+    print(f'Searching for {find}: {T.search_iterative(find)}')
+
+    print('Minimum value =', T.minimum(T.root).data)
+    print('Maximum value =', T.maximum(T.root).data)
+
+    node_32 = T.root.left.right.right
+    print(f'Tree successor of node {node_32.data} is {T.successor(node_32).data}')
+
+    T.print_tree()
+
+    #node_26 = T.search(T.root, 26)
+    #T.delete(node_26)
+
+    #node_80 = T.search(T.root, 80)
+    #T.delete(node_80)
+
+    node_20 = T.search(T.root, 20)
+    T.delete(node_20)
+
+    T.print_tree()

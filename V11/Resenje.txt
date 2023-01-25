@@ -1,0 +1,176 @@
+import math
+
+
+class Vertex:
+    def __init__(self, name):
+        self.name = name
+        self.d = math.inf
+        self.p = None
+
+    def __str__(self):
+        return self.name
+
+
+class Edge:
+    def __init__(self, src, dst, w):
+        self.src = src
+        self.dst = dst
+        self.w = w
+
+
+class Graph:
+    def __init__(self, V, E):
+        self.V = V
+        self.E = E
+
+    def __str__(self):
+        s = ''
+        for e in self.E:
+            s += e.src.name + ' -> ' + e.dst.name + ', w = ' + str(e.w) + '.\n'
+        return s
+
+    def get_in_degrees(self):
+        list = []
+        dict = {}
+        for vertex in self.V:
+            range = 0
+            for edge in self.E:
+                if edge.dst == vertex:
+                    range += 1
+            dict[vertex.name] = range
+            list.append(range)
+
+        return list, dict
+
+    def get_out_degrees(self):
+        list = []
+        dict = {}
+        for vertex in self.V:
+            range = 0
+            for edge in self.E:
+                if edge.src == vertex:
+                    range += 1
+            dict[vertex.name] = range
+            list.append(range)
+
+        return list, dict
+
+    def shortest_path(self, nodeA, nodeB):
+        self.bellman_ford(nodeA)
+        list = self.print_path(nodeA, nodeB, [])
+        return list, nodeB.d
+
+    def print_path(self, u, v, list):
+        if v is u:
+            #print(u)
+            list.append(u)
+        elif v.p is None:
+            print('No path from', u, 'to', v, '.')
+            return None, None
+        else:
+            list = self.print_path(u, v.p, list)
+            list.append(v)
+            #print(v)
+
+        return list
+
+    def bellman_ford(self, s):
+        self.init_single_source(s)
+        for v in self.V:
+            for e in self.E:
+                self.relax(e.src, e.dst, self.get_weight(e.src, e.dst))
+        for e in self.E:
+            if e.dst.d > e.src.d + self.get_weight(e.src, e.dst):
+                return False
+
+        return True
+
+    def get_weight(self, u, v):
+        for e in self.E:
+            if e.src == u and e.dst == v:
+                return e.w
+        return math.inf
+
+    def init_single_source(self, s):
+        for v in self.V:
+            v.d = math.inf
+            v.p = None
+        s.d = 0
+
+    def relax(self, u, v, w):
+        if v.d > u.d + w:
+            v.d = u.d + w
+            v.p = u
+
+    def update_edge(self, nodeA, nodeB, w):
+        exist = False
+        for e in self.E:
+            if e.src == nodeA and e.dst == nodeB:
+                exist = True
+                e.w = w
+        if exist is False:
+            self.E.append(Edge(nodeA, nodeB, w))
+
+
+a = Vertex('a')
+b = Vertex('b')
+c = Vertex('c')
+d = Vertex('d')
+e = Vertex('e')
+f = Vertex('f')
+g = Vertex('g')
+
+V = [a, b, c, d, e, f, g]
+
+ab = Edge(a, b, 8)
+ac = Edge(a, c, 6)
+bd = Edge(b, d, 10)
+cd = Edge(c, d, 15)
+ce = Edge(c, e, 9)
+de = Edge(d, e, 14)
+df = Edge(d, f, 4)
+ef = Edge(e, f, 13)
+eg = Edge(e, g, 17)
+fg = Edge(f, g, 7)
+
+E = [ab, ac, bd, cd, ce, de, df, ef, eg, fg]
+
+G = Graph(V, E)
+
+print(G)
+
+list, dict = G.get_in_degrees()
+print('In degrees:')
+print(list)
+print(dict)
+
+list, dict = G.get_out_degrees()
+print('Out degrees:')
+print(list)
+print(dict)
+
+print('Shortest path:')
+list, d_sum = G.shortest_path(a, g)
+for v in list:
+    print(v)
+print('Length:', d_sum)
+
+G.update_edge(b, c, -4)
+print('Graph after update b->c -4:')
+print(G)
+
+print('Shortest path after update:')
+list, d_sum = G.shortest_path(a, g)
+for v in list:
+    print(v)
+print('Length:', d_sum)
+
+G.update_edge(d, e, -10)
+print('Graph after update d->c -10:')
+print(G)
+
+print('Shortest path after update:')
+list, d_sum = G.shortest_path(a, g)
+for v in list:
+    print(v)
+print('Length:', d_sum)
